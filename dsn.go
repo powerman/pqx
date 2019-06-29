@@ -23,19 +23,22 @@ const (
 
 // Config described connection parameters for github.com/lib/pq.
 type Config struct {
-	DBName                      string
-	User                        string
-	Pass                        string
-	Host                        string
-	Port                        int
-	FallbackApplicationName     string
-	ConnectTimeout              time.Duration // Round to seconds.
-	SSLMode                     SSLMode
-	SSLCert                     string             // PEM file path.
-	SSLKey                      string             // PEM file path.
-	SSLRootCert                 string             // PEM file path.
-	DefaultTransactionIsolation sql.IsolationLevel // One of: LevelDefault, LevelReadUncommitted, LevelReadCommitted, LevelRepeatableRead, LevelSerializable.
-	Custom                      map[string]string  // Any other parameters from https://www.postgresql.org/docs/current/runtime-config-client.html.
+	DBName                          string
+	User                            string
+	Pass                            string
+	Host                            string
+	Port                            int
+	FallbackApplicationName         string
+	ConnectTimeout                  time.Duration // Round to seconds.
+	SSLMode                         SSLMode
+	SSLCert                         string             // PEM file path.
+	SSLKey                          string             // PEM file path.
+	SSLRootCert                     string             // PEM file path.
+	DefaultTransactionIsolation     sql.IsolationLevel // One of: LevelDefault, LevelReadUncommitted, LevelReadCommitted, LevelRepeatableRead, LevelSerializable.
+	StatementTimeout                time.Duration      // Round to milliseconds.
+	LockTimeout                     time.Duration      // Round to milliseconds.
+	IdleInTransactionSessionTimeout time.Duration      // Round to milliseconds.
+	Other                           map[string]string  // Any other parameters from https://www.postgresql.org/docs/current/runtime-config-client.html.
 }
 
 // FormatDSN returns dataSourceName string with properly escaped
@@ -76,9 +79,12 @@ func (c Config) FormatDSN() string {
 	default:
 		panic(fmt.Sprintf("invalid DefaultTransactionIsolation: %s", c.DefaultTransactionIsolation))
 	}
+	accrue("statement_timeout", timeoutMilliseconds(c.StatementTimeout))
+	accrue("lock_timeout", timeoutMilliseconds(c.LockTimeout))
+	accrue("idle_in_transaction_session_timeout", timeoutMilliseconds(c.IdleInTransactionSessionTimeout))
 
 	customPos := len(kvs)
-	for k, v := range c.Custom {
+	for k, v := range c.Other {
 		accrue(k, v)
 	}
 	sort.Strings(kvs[customPos:]) // For testing.
@@ -94,5 +100,16 @@ func timeoutSeconds(t time.Duration) string {
 		return "1"
 	default:
 		return strconv.Itoa(int(t.Round(time.Second).Seconds()))
+	}
+}
+
+func timeoutMilliseconds(t time.Duration) string {
+	switch {
+	case t == 0:
+		return ""
+	case 0 < t && t < time.Millisecond:
+		return "1"
+	default:
+		return strconv.Itoa(int(t.Round(time.Millisecond) / time.Millisecond))
 	}
 }
