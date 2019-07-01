@@ -232,9 +232,10 @@ issues:
       linters:
         - gocritic
 
-    # Package def is designed to contain global constants.
-    - path: internal/def/
+    # File dialer is designed to contain init and global var.
+    - path: dialer.go
       linters:
+        - gochecknoinits
         - gochecknoglobals
 
     # Exclude known linters from partially hard-vendored code,
