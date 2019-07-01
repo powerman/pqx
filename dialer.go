@@ -32,10 +32,10 @@ func (d dialer) DialTimeout(network, address string, timeout time.Duration) (net
 	return Dial(network, address, timeout)
 }
 
-// DialFunc used to open new connections to PostreSQL server.
+// DialFunc used to open new connections to PostgreSQL server.
 type DialFunc func(network, address string, timeout time.Duration) (net.Conn, error)
 
-// Dial is a hook which should be set before connecting to PostreSQL
+// Dial is a hook which should be set before connecting to PostgreSQL
 // server using "pqx" driver.
 var Dial = KeepAliveDial(time.Minute)
 
