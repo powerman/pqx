@@ -22,6 +22,7 @@ func TestConfig(tt *testing.T) {
 			DBName: "db", User: "u", Pass: "p", Host: "h", Port: 1,
 			FallbackApplicationName: "a", ConnectTimeout: 2 * time.Second,
 			SSLMode: SSLVerifyFull, SSLCert: "crt", SSLKey: "key", SSLRootCert: "ca",
+			SearchPath:                      "public",
 			DefaultTransactionIsolation:     sql.LevelSerializable,
 			StatementTimeout:                1 * time.Second,
 			LockTimeout:                     2 * time.Second,
@@ -30,7 +31,7 @@ func TestConfig(tt *testing.T) {
 		}, `dbname=db user=u password=p host=h port=1 ` +
 			`fallback_application_name=a connect_timeout=2 ` +
 			`sslmode=verify-full sslcert=crt sslkey=key sslrootcert=ca ` +
-			`default_transaction_isolation=serializable ` +
+			`search_path=public default_transaction_isolation=serializable ` +
 			`statement_timeout=1000 lock_timeout=2000 ` +
 			`idle_in_transaction_session_timeout=3000 ` +
 			`a=A b=B`, ``},
@@ -42,6 +43,8 @@ func TestConfig(tt *testing.T) {
 			`connect_timeout=1`, ``},
 		{Config{ConnectTimeout: time.Second / 10},
 			`connect_timeout=1`, ``},
+		{Config{SearchPath: `"$user", public`},
+			`search_path="$user",\ public`, ``},
 		{Config{DefaultTransactionIsolation: sql.LevelDefault},
 			``, ``},
 		{Config{DefaultTransactionIsolation: sql.LevelReadUncommitted},

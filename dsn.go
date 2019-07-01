@@ -34,6 +34,7 @@ type Config struct {
 	SSLCert                         string             // PEM file path.
 	SSLKey                          string             // PEM file path.
 	SSLRootCert                     string             // PEM file path.
+	SearchPath                      string             // Specifies the order in which schemas are searched.
 	DefaultTransactionIsolation     sql.IsolationLevel // One of: LevelDefault, LevelReadUncommitted, LevelReadCommitted, LevelRepeatableRead, LevelSerializable.
 	StatementTimeout                time.Duration      // Round to milliseconds.
 	LockTimeout                     time.Duration      // Round to milliseconds.
@@ -66,6 +67,7 @@ func (c Config) FormatDSN() string {
 	accrue("sslcert", c.SSLCert)
 	accrue("sslkey", c.SSLKey)
 	accrue("sslrootcert", c.SSLRootCert)
+	accrue("search_path", c.SearchPath)
 	switch c.DefaultTransactionIsolation {
 	case sql.LevelDefault:
 	case sql.LevelReadUncommitted:
