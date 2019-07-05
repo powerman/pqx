@@ -43,7 +43,7 @@ jobs:
                 command: dockerize -wait tcp://localhost:5432 -timeout 5m
             - run: go test -mod=readonly -v -race -tags=integration ./...
             - run: golangci-lint run
-            - run: goveralls -service=circle-ci
+            - run: goveralls -service=circle-ci -flags -tags=integration
             - save_cache:
                 when: always
                 key: v1-{{ checksum "/tmp/tools.ver" }}-{{ checksum "go.mod" }}-{{ .Branch }}
