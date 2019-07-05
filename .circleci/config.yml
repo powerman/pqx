@@ -4,8 +4,18 @@ jobs:
     build:
         docker:
             - image: circleci/golang:1
-        environment:
-            GOLANGCI_LINT_VER: 1.17.1
+              environment:
+                GOLANGCI_LINT_VER:  1.17.1
+                DOCKERIZE_VER:      0.11.0
+                PGUSER:             postgresuser
+                PGPASSWORD:         postgrespass
+                PGDATABASE:         postgres
+                PGSSLMODE:          disable
+            - image: "postgres:11.4"
+              environment:
+                POSTGRES_USER:      postgresuser
+                POSTGRES_PASSWORD:  postgrespass
+                POSTGRES_DB:        postgres
         steps:
             - checkout
             - run:
@@ -25,8 +35,13 @@ jobs:
                     cd /
                     golangci-lint --version | tee /dev/stderr | grep -wq $GOLANGCI_LINT_VER ||
                         curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v$GOLANGCI_LINT_VER
+                    wget -q -O - https://github.com/powerman/dockerize/releases/download/v$DOCKERIZE_VER/dockerize-`uname -s`-`uname -m` |
+                        install /dev/stdin /go/bin/dockerize
                     go get -v github.com/mattn/goveralls
-            - run: go test -mod=readonly -v -race ./...
+            - run:
+                name: Wait for dependencies
+                command: dockerize -wait tcp://localhost:5432 -timeout 5m
+            - run: go test -mod=readonly -v -race -tags=integration ./...
             - run: golangci-lint run
             - run: goveralls -service=circle-ci
             - save_cache:
