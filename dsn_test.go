@@ -14,10 +14,11 @@ func TestConfig(tt *testing.T) {
 
 	testCases := []struct {
 		cfg       Config
-		want      string
+		wantDSN   string
+		wantURL   string
 		wantPanic string
 	}{
-		{Config{}, ``, ``},
+		{Config{}, ``, `postgres:///`, ``},
 		{Config{
 			DBName: "db", User: "u", Pass: "p", Host: "h", Port: 1,
 			FallbackApplicationName: "a", ConnectTimeout: 2 * time.Second,
@@ -34,49 +35,92 @@ func TestConfig(tt *testing.T) {
 			`search_path=public default_transaction_isolation=serializable ` +
 			`statement_timeout=1000 lock_timeout=2000 ` +
 			`idle_in_transaction_session_timeout=3000 ` +
-			`a=A b=B`, ``},
+			`a=A b=B`,
+			`postgres://u:p@h:1/db?a=A&b=B&connect_timeout=2&` +
+				`default_transaction_isolation=serializable&` +
+				`fallback_application_name=a&` +
+				`idle_in_transaction_session_timeout=3000&lock_timeout=2000&` +
+				`search_path=public&sslcert=crt&sslkey=key&sslmode=verify-full&` +
+				`sslrootcert=ca&statement_timeout=1000`,
+			``},
 		{Config{Pass: `' very \special `},
-			`password=\'\ very\ \\special\ `, ``},
+			`password=\'\ very\ \\special\ `,
+			`postgres://:%27%20very%20%5Cspecial%20@/`,
+			``},
 		{Config{ConnectTimeout: time.Second * 3 / 2},
-			`connect_timeout=2`, ``},
+			`connect_timeout=2`,
+			`postgres:///?connect_timeout=2`,
+			``},
 		{Config{ConnectTimeout: time.Second / 2},
-			`connect_timeout=1`, ``},
+			`connect_timeout=1`,
+			`postgres:///?connect_timeout=1`,
+			``},
 		{Config{ConnectTimeout: time.Second / 10},
-			`connect_timeout=1`, ``},
+			`connect_timeout=1`,
+			`postgres:///?connect_timeout=1`,
+			``},
 		{Config{SearchPath: `"$user", public`},
-			`search_path="$user",\ public`, ``},
+			`search_path="$user",\ public`,
+			`postgres:///?search_path=%22%24user%22%2C+public`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelDefault},
-			``, ``},
+			``,
+			`postgres:///`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelReadUncommitted},
-			`default_transaction_isolation=read\ uncommitted`, ``},
+			`default_transaction_isolation=read\ uncommitted`,
+			`postgres:///?default_transaction_isolation=read+uncommitted`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelReadCommitted},
-			`default_transaction_isolation=read\ committed`, ``},
+			`default_transaction_isolation=read\ committed`,
+			`postgres:///?default_transaction_isolation=read+committed`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelWriteCommitted},
-			``, `invalid.*Write Committed`},
+			``, ``, `invalid.*Write Committed`},
 		{Config{DefaultTransactionIsolation: sql.LevelRepeatableRead},
-			`default_transaction_isolation=repeatable\ read`, ``},
+			`default_transaction_isolation=repeatable\ read`,
+			`postgres:///?default_transaction_isolation=repeatable+read`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelSnapshot},
-			``, `invalid.*Snapshot`},
+			``, ``, `invalid.*Snapshot`},
 		{Config{DefaultTransactionIsolation: sql.LevelSerializable},
-			`default_transaction_isolation=serializable`, ``},
+			`default_transaction_isolation=serializable`,
+			`postgres:///?default_transaction_isolation=serializable`,
+			``},
 		{Config{DefaultTransactionIsolation: sql.LevelLinearizable},
-			``, `invalid.*Linearizable`},
+			``, ``, `invalid.*Linearizable`},
 		{Config{StatementTimeout: time.Millisecond * 3 / 2},
-			`statement_timeout=2`, ``},
+			`statement_timeout=2`,
+			`postgres:///?statement_timeout=2`,
+			``},
 		{Config{StatementTimeout: time.Millisecond / 2},
-			`statement_timeout=1`, ``},
+			`statement_timeout=1`,
+			`postgres:///?statement_timeout=1`,
+			``},
 		{Config{LockTimeout: time.Millisecond * 3 / 2},
-			`lock_timeout=2`, ``},
+			`lock_timeout=2`,
+			`postgres:///?lock_timeout=2`,
+			``},
 		{Config{LockTimeout: time.Millisecond / 2},
-			`lock_timeout=1`, ``},
+			`lock_timeout=1`,
+			`postgres:///?lock_timeout=1`,
+			``},
 		{Config{IdleInTransactionSessionTimeout: time.Millisecond * 3 / 2},
-			`idle_in_transaction_session_timeout=2`, ``},
+			`idle_in_transaction_session_timeout=2`,
+			`postgres:///?idle_in_transaction_session_timeout=2`,
+			``},
 		{Config{IdleInTransactionSessionTimeout: time.Millisecond / 2},
-			`idle_in_transaction_session_timeout=1`, ``},
+			`idle_in_transaction_session_timeout=1`,
+			`postgres:///?idle_in_transaction_session_timeout=1`,
+			``},
 		{Config{Other: map[string]string{"a": ""}},
-			``, ``},
+			``,
+			`postgres:///`,
+			``},
 		{Config{Other: map[string]string{"a": " "}},
-			`a=\ `, ``},
+			`a=\ `,
+			`postgres:///?a=+`,
+			``},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -85,7 +129,8 @@ func TestConfig(tt *testing.T) {
 			if tc.wantPanic != "" {
 				t.PanicMatch(func() { tc.cfg.FormatDSN() }, tc.wantPanic)
 			} else {
-				t.Equal(tc.cfg.FormatDSN(), tc.want)
+				t.Equal(tc.cfg.FormatDSN(), tc.wantDSN)
+				t.Equal(tc.cfg.FormatURL(), tc.wantURL)
 			}
 		})
 	}

@@ -3,6 +3,7 @@ package pqx
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -61,6 +62,45 @@ func (c Config) FormatDSN() string {
 	if c.Port > 0 {
 		accrue("port", strconv.Itoa(c.Port))
 	}
+	for _, kv := range c.options() { //nolint:gocritic
+		accrue(kv[0], kv[1])
+	}
+
+	return strings.Join(kvs, " ")
+}
+
+// FormatURL returns dataSourceName url suitable for sql.Open.
+func (c Config) FormatURL() string {
+	var u url.URL
+	u.Scheme = "postgres"
+
+	if c.Pass != "" {
+		u.User = url.UserPassword(c.User, c.Pass)
+	} else if c.User != "" {
+		u.User = url.User(c.User)
+	}
+	u.Host = c.Host
+	if c.Port > 0 {
+		u.Host += fmt.Sprintf(":%d", c.Port)
+	}
+	u.Path = "/" + c.DBName
+
+	v := make(url.Values)
+	for _, kv := range c.options() { //nolint:gocritic
+		v.Set(kv[0], kv[1])
+	}
+	u.RawQuery = v.Encode()
+
+	return u.String()
+}
+
+func (c Config) options() [][2]string {
+	opts := make([][2]string, 0)
+	accrue := func(k, v string) {
+		if v != "" {
+			opts = append(opts, [2]string{k, v})
+		}
+	}
 	accrue("fallback_application_name", c.FallbackApplicationName)
 	accrue("connect_timeout", timeoutSeconds(c.ConnectTimeout))
 	accrue("sslmode", string(c.SSLMode))
@@ -85,13 +125,13 @@ func (c Config) FormatDSN() string {
 	accrue("lock_timeout", timeoutMilliseconds(c.LockTimeout))
 	accrue("idle_in_transaction_session_timeout", timeoutMilliseconds(c.IdleInTransactionSessionTimeout))
 
-	customPos := len(kvs)
+	off := len(opts)
 	for k, v := range c.Other {
 		accrue(k, v)
 	}
-	sort.Strings(kvs[customPos:]) // For testing.
+	sort.Slice(opts[off:], func(i, j int) bool { return opts[off+i][0] < opts[off+j][0] }) // For testing.
 
-	return strings.Join(kvs, " ")
+	return opts
 }
 
 func timeoutSeconds(t time.Duration) string {
