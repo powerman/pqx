@@ -1,16 +1,23 @@
 package pqx
 
 import (
+	"errors"
+	"math/rand"
+	"time"
+
 	"github.com/lib/pq"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // IsSerializationFailure returns a boolean indicating whether the error
 // is 40001 (serialization_failure).
 //
-// It tries to unwrap err using github.com/pkg/errors.Cause().
+// It tries to unwrap err using github.com/pkg/errors.Cause() or errors.As().
 func IsSerializationFailure(err error) bool {
-	pqErr, ok := errors.Cause(err).(*pq.Error)
+	pqErr, ok := pkgerrors.Cause(err).(*pq.Error)
+	if !ok {
+		ok = errors.As(err, &pqErr)
+	}
 	return ok && pqErr.Code.Name() == "serialization_failure"
 }
 
@@ -25,6 +32,8 @@ func Serialize(doTx func() error) error {
 	const maxTries = 10
 	err, try := doTx(), 1
 	for IsSerializationFailure(err) && try < maxTries {
+		delay := time.Duration(rand.Intn(20)) * time.Millisecond
+		time.Sleep(delay)
 		err, try = doTx(), try+1
 	}
 	return err
