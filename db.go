@@ -19,7 +19,7 @@ type Logger interface {
 // connect to temporary db.
 //
 // Recommended value for suffix is your package's import path.
-func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo
+func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen
 	onErr := func(f func()) {
 		if err != nil {
 			f()
