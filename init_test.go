@@ -1,4 +1,4 @@
-package pqx
+package pqx_test
 
 import (
 	"os"

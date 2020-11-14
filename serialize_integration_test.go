@@ -1,6 +1,6 @@
 // +build integration
 
-package pqx
+package pqx_test
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/powerman/check"
+
+	"github.com/powerman/pqx"
 )
 
 func TestSerialize(tt *testing.T) {
@@ -23,8 +25,8 @@ func TestSerialize(tt *testing.T) {
 
 	var runs int32
 	errc := make(chan error, 2)
-	go func() { errc <- Serialize(func() error { atomic.AddInt32(&runs, 1); return conflict(1) }) }()
-	go func() { errc <- Serialize(func() error { atomic.AddInt32(&runs, 1); return conflict(2) }) }()
+	go func() { errc <- pqx.Serialize(func() error { atomic.AddInt32(&runs, 1); return conflict(1) }) }()
+	go func() { errc <- pqx.Serialize(func() error { atomic.AddInt32(&runs, 1); return conflict(2) }) }()
 	t.Nil(<-errc)
 	t.Nil(<-errc)
 	t.Greater(runs, 2)

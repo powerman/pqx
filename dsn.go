@@ -108,7 +108,7 @@ func (c Config) options() [][2]string {
 	accrue("sslkey", c.SSLKey)
 	accrue("sslrootcert", c.SSLRootCert)
 	accrue("search_path", c.SearchPath)
-	switch c.DefaultTransactionIsolation {
+	switch c.DefaultTransactionIsolation { //nolint:exhaustive // Handled by default case.
 	case sql.LevelDefault:
 	case sql.LevelReadUncommitted:
 		accrue("default_transaction_isolation", "read uncommitted")
