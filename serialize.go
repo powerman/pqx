@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+
+	//nolint:depguard // For compatibility.
 	pkgerrors "github.com/pkg/errors"
 )
 
@@ -14,7 +16,7 @@ import (
 //
 // It tries to unwrap err using github.com/pkg/errors.Cause() or errors.As().
 func IsSerializationFailure(err error) bool {
-	pqErr, ok := pkgerrors.Cause(err).(*pq.Error)
+	pqErr, ok := pkgerrors.Cause(err).(*pq.Error) //nolint:errorlint // False positive.
 	if !ok {
 		ok = errors.As(err, &pqErr)
 	}
@@ -29,10 +31,13 @@ func IsSerializationFailure(err error) bool {
 //
 // Returns value returned by last doTx call.
 func Serialize(doTx func() error) error {
-	const maxTries = 10
+	const (
+		maxTries         = 10
+		maxDelayInMillis = 20
+	)
 	err, try := doTx(), 1
 	for IsSerializationFailure(err) && try < maxTries {
-		delay := time.Duration(rand.Intn(20)) * time.Millisecond
+		delay := time.Duration(rand.Intn(maxDelayInMillis)) * time.Millisecond //nolint:gosec // No need in crypto/rand..
 		time.Sleep(delay)
 		err, try = doTx(), try+1
 	}

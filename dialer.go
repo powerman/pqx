@@ -9,6 +9,7 @@ import (
 	"github.com/lib/pq"
 )
 
+//nolint:gochecknoinits // By design.
 func init() {
 	sql.Register("pqx", &sqlDriver{})
 }
@@ -37,6 +38,8 @@ type DialFunc func(network, address string, timeout time.Duration) (net.Conn, er
 
 // Dial is a hook which should be set before connecting to PostgreSQL
 // server using "pqx" driver.
+//
+//nolint:gochecknoglobals // By design.
 var Dial = KeepAliveDial(time.Minute)
 
 // KeepAliveDial returns hook which adds TCP keepalives.

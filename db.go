@@ -2,6 +2,7 @@ package pqx
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 
@@ -22,7 +23,7 @@ type Logger interface {
 // It'll also create schema with name set to dbCfg.User in temporary db.
 //
 // Recommended value for suffix is your package's import path.
-func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen
+func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen,gocognit // Not sure is it make sense to split.
 	onErr := func(f func()) {
 		if err != nil {
 			f()
@@ -52,12 +53,12 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 	sqlDropDB := fmt.Sprintf("DROP DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
 	sqlCreateDB := fmt.Sprintf("CREATE DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
 	if _, err = db.Exec(sqlDropDB); err != nil {
-		if e, ok := err.(*pq.Error); !(ok && e.Code.Name() == "invalid_catalog_name") {
-			return nil, nil, fmt.Errorf("failed to drop temporary db: %v", err)
+		if e := new(pq.Error); !(errors.As(err, &e) && e.Code.Name() == "invalid_catalog_name") {
+			return nil, nil, fmt.Errorf("failed to drop temporary db: %w", err)
 		}
 	}
 	if _, err := db.Exec(sqlCreateDB); err != nil {
-		return nil, nil, fmt.Errorf("failed to create temporary db: %v", err)
+		return nil, nil, fmt.Errorf("failed to create temporary db: %w", err)
 	}
 	dropTempDB := func() {
 		if _, err := db.Exec(sqlDropDB); err != nil {
@@ -82,7 +83,7 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 	}
 	sqlCreateSchema := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS AUTHORIZATION %s", pq.QuoteIdentifier(dbCfg.User))
 	if _, err := dbTemp.Exec(sqlCreateSchema); err != nil {
-		return nil, nil, fmt.Errorf("failed to create schema in temporary db: %v", err)
+		return nil, nil, fmt.Errorf("failed to create schema in temporary db: %w", err)
 	}
 
 	err = dbTemp.Ping()
