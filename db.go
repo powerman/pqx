@@ -3,6 +3,7 @@ package pqx
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/lib/pq"
 )
@@ -17,6 +18,8 @@ type Logger interface {
 // close and drop temporary db. It will use dbCfg to connect to existing
 // database first, and then reuse same dbCfg with modified DBName to
 // connect to temporary db.
+//
+// It'll also create schema with name set to dbCfg.User in temporary db.
 //
 // Recommended value for suffix is your package's import path.
 func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen
@@ -42,6 +45,9 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		return nil, nil, err
 	}
 
+	if dbCfg.DBName == "" {
+		dbCfg.DBName = os.Getenv("PGDATABASE")
+	}
 	dbCfg.DBName += "_" + suffix
 	sqlDropDB := fmt.Sprintf("DROP DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
 	sqlCreateDB := fmt.Sprintf("CREATE DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
@@ -70,6 +76,14 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		}
 	}
 	defer onErr(closeTempDB)
+
+	if dbCfg.User == "" {
+		dbCfg.User = os.Getenv("PGUSER")
+	}
+	sqlCreateSchema := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS AUTHORIZATION %s", pq.QuoteIdentifier(dbCfg.User))
+	if _, err := dbTemp.Exec(sqlCreateSchema); err != nil {
+		return nil, nil, fmt.Errorf("failed to create schema in temporary db: %v", err)
+	}
 
 	err = dbTemp.Ping()
 	if err != nil {
