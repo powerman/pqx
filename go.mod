@@ -3,7 +3,7 @@ module github.com/powerman/pqx
 go 1.15
 
 require (
-	github.com/golangci/golangci-lint v1.32.2
+	github.com/golangci/golangci-lint v1.35.0
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5
 	github.com/lib/pq v1.8.0
 	github.com/mattn/goveralls v0.0.7
