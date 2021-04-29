@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "03:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: github.com/lib/pq
+    versions:
+    - 1.10.0
+    - 1.9.0
+  - dependency-name: github.com/golangci/golangci-lint
+    versions:
+    - 1.36.0
+    - 1.37.0
+    - 1.37.1
+    - 1.38.0
