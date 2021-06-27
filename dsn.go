@@ -62,7 +62,7 @@ func (c Config) FormatDSN() string {
 	if c.Port > 0 {
 		accrue("port", strconv.Itoa(c.Port))
 	}
-	for _, kv := range c.options() { //nolint:gocritic
+	for _, kv := range c.options() {
 		accrue(kv[0], kv[1])
 	}
 
@@ -86,7 +86,7 @@ func (c Config) FormatURL() string {
 	u.Path = "/" + c.DBName
 
 	v := make(url.Values)
-	for _, kv := range c.options() { //nolint:gocritic
+	for _, kv := range c.options() {
 		v.Set(kv[0], kv[1])
 	}
 	u.RawQuery = v.Encode()

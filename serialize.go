@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-
-	//nolint:depguard // For compatibility.
 	pkgerrors "github.com/pkg/errors"
 )
 

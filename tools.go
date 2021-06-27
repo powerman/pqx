@@ -1,6 +1,8 @@
-// +build tools
+// +build tools generate
 
-package pqx
+//go:generate sh -c "GOBIN=$PWD/.gobincache go install $(sed -n 's/.*_ \"\\(.*\\)\".*/\\1/p' <$GOFILE)"
+
+package tools
 
 import (
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
