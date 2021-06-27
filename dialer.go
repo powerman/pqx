@@ -17,19 +17,19 @@ func init() {
 type sqlDriver struct{}
 
 // Open returns a new SQL driver connection using Dial hook.
-func (d *sqlDriver) Open(name string) (driver.Conn, error) {
+func (*sqlDriver) Open(name string) (driver.Conn, error) {
 	return pq.DialOpen(&dialer{}, name)
 }
 
 type dialer struct{}
 
 // Dial implements pq.Dialer interface.
-func (d dialer) Dial(network, address string) (net.Conn, error) {
-	return Dial(network, address, 0)
+func (dialer) Dial(network, address string) (net.Conn, error) {
+	return Dial(network, address, 0) //nolint:revive // False positive.
 }
 
 // DialTimeout implements pq.Dialer interface.
-func (d dialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
+func (dialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
 	return Dial(network, address, timeout)
 }
 

@@ -1,59 +1,43 @@
 version: 2.1
 
-# Snippets for jobs:
-setup_env: &setup_env
-  run:
-    name: Setup environment
-    command: |
-      env | sort > /tmp/env.old
-
-      env | sort > /tmp/env.new
-      ! diff -u /tmp/env.old /tmp/env.new | sed -n '/^+[^+]/s/^./export /p' >> $BASH_ENV
-      env | grep _VER | sort > /tmp/tools.ver
-
 jobs:
   test:
     docker:
-      - image: "cimg/go:1.15"
+      - image: "cimg/go:1.16"
         environment:
           GOFLAGS: "-mod=readonly"
           PGUSER:             postgresuser
           PGPASSWORD:         postgrespass
           PGDATABASE:         postgres
           PGSSLMODE:          disable
-      - image: "postgres:11.10"
+      - image: "postgres:12.7"
         environment:
           POSTGRES_USER:      postgresuser
           POSTGRES_PASSWORD:  postgrespass
           POSTGRES_DB:        postgres
     steps:
       - checkout
-      - *setup_env
       - restore_cache:
           keys:
-            - v3-{{ checksum "/tmp/tools.ver" }}-{{ checksum "go.mod" }}-{{ .Branch }}
-            - v3-{{ checksum "/tmp/tools.ver" }}-{{ checksum "go.mod" }}-
-            - v3-{{ checksum "/tmp/tools.ver" }}-
-      - run:
-          name: Install tools
-          command: |
-            GO111MODULE=off go get -u github.com/myitcv/gobin
-      - run: gobin -m -run github.com/golangci/golangci-lint/cmd/golangci-lint run
+            - v3-{{ checksum "go.mod" }}-{{ .Branch }}
+            - v3-{{ checksum "go.mod" }}-
+            - v3-
+      - run: go generate
+      - run: .gobincache/golangci-lint run
       - run:
           name: Wait for dependencies
-          command: gobin -m -run github.com/powerman/dockerize -wait tcp://localhost:5432 -timeout 5m
-      - run: go test -v -race -tags=integration ./...
-      - run: gobin -m -run github.com/mattn/goveralls -service=CircleCI -flags -tags=integration
+          command: .gobincache/dockerize -wait tcp://localhost:5432 -timeout 5m
+      - run: go test -race -tags=integration ./...
+      - run: .gobincache/goveralls -service=CircleCI -flags -tags=integration
       - save_cache:
           when: always
-          key: v3-{{ checksum "/tmp/tools.ver" }}-{{ checksum "go.mod" }}-{{ .Branch }}
+          key: v3-{{ checksum "go.mod" }}-{{ .Branch }}
           paths:
             - ~/go/bin/
             - ~/go/pkg/
             - ~/go/src/
             - ~/.cache/go-build/
             - ~/.cache/golangci-lint/
-            - ~/.cache/gobin/
             - .gobincache/
 
 workflows:

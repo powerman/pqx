@@ -23,7 +23,7 @@ type Logger interface {
 // It'll also create schema with name set to dbCfg.User in temporary db.
 //
 // Recommended value for suffix is your package's import path.
-func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen,gocognit // Not sure is it make sense to split.
+func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen,gocognit,cyclop // Not sure is it make sense to split.
 	onErr := func(f func()) {
 		if err != nil {
 			f()
