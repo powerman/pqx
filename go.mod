@@ -9,6 +9,6 @@ require (
 	github.com/mattn/goveralls v0.0.9
 	github.com/pkg/errors v0.9.1
 	github.com/powerman/check v1.4.0
-	github.com/powerman/dockerize v0.13.1
+	github.com/powerman/dockerize v0.15.1
 	github.com/powerman/gotest v0.3.0
 )
