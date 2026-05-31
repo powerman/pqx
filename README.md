@@ -1,4 +1,4 @@
-# pqx [![GoDoc](https://godoc.org/github.com/powerman/pqx?status.svg)](http://godoc.org/github.com/powerman/pqx) [![Go Report Card](https://goreportcard.com/badge/github.com/powerman/pqx)](https://goreportcard.com/report/github.com/powerman/pqx) [![CircleCI](https://circleci.com/gh/powerman/pqx.svg?style=svg)](https://circleci.com/gh/powerman/pqx) [![Coverage Status](https://coveralls.io/repos/github/powerman/pqx/badge.svg?branch=master)](https://coveralls.io/github/powerman/pqx?branch=master) [![Latest Release](https://img.shields.io/github/tag/powerman/pqx.svg)](https://github.com/powerman/pqx/releases/latest)
+# pqx
 
 [![License MIT](https://img.shields.io/badge/license-MIT-royalblue.svg)](LICENSE)
 [![Go version](https://img.shields.io/github/go-mod/go-version/powerman/pqx?color=blue)](https://go.dev/)
