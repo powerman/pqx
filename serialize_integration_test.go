@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package pqx_test
 
@@ -48,7 +48,7 @@ func conflict(class int) (err error) {
 		err = tx.Get(&sum, `SELECT SUM(value) FROM serialize WHERE class=$1`, class)
 	}
 	if err == nil {
-		time.Sleep(testSecond / 10)
+		time.Sleep(time.Second / 10)
 		_, err = tx.Exec(`INSERT INTO serialize (class,value) VALUES ($1,$2)`, 3-class, sum)
 	}
 	if err == nil {

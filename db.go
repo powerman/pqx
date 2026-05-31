@@ -1,6 +1,7 @@
 package pqx
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 
 // Logger interface consumed by this package.
 type Logger interface {
-	Print(...interface{})
+	Print(v ...any)
 }
 
 // EnsureTempDB will drop/create new temporary db with suffix in db name
@@ -23,7 +24,7 @@ type Logger interface {
 // It'll also create schema with name set to dbCfg.User in temporary db.
 //
 // Recommended value for suffix is your package's import path.
-func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen,gocognit,cyclop // Not sure is it make sense to split.
+func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup func(), err error) { //nolint:gocyclo,funlen,cyclop // Not sure is it make sense to split.
 	onErr := func(f func()) {
 		if err != nil {
 			f()
@@ -35,13 +36,14 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		return nil, nil, err
 	}
 	closeDB := func() {
-		if err := db.Close(); err != nil {
+		err := db.Close()
+		if err != nil {
 			log.Print("failed to close db: ", err)
 		}
 	}
 	defer onErr(closeDB)
 
-	err = db.Ping()
+	err = db.PingContext(context.Background())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -52,17 +54,21 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 	dbCfg.DBName += "_" + suffix
 	sqlDropDB := fmt.Sprintf("DROP DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
 	sqlCreateDB := fmt.Sprintf("CREATE DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
-	if _, err = db.Exec(sqlDropDB); err != nil {
-		if e := new(pq.Error); !(errors.As(err, &e) && e.Code.Name() == "invalid_catalog_name") {
+	_, err = db.ExecContext(context.Background(), sqlDropDB) //nolint:gosec // pq.QuoteIdentifier ensures safe identifier quoting.
+	if err != nil {
+		e := new(pq.Error)
+		if !errors.As(err, &e) || e.Code.Name() != "invalid_catalog_name" {
 			return nil, nil, fmt.Errorf("failed to drop temporary db: %w", err)
 		}
 	}
-	if _, err := db.Exec(sqlCreateDB); err != nil {
+	_, err = db.ExecContext(context.Background(), sqlCreateDB) //nolint:gosec // pq.QuoteIdentifier ensures safe identifier quoting.
+	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create temporary db: %w", err)
 	}
 	dropTempDB := func() {
-		if _, err := db.Exec(sqlDropDB); err != nil {
-			log.Print("failed to drop temporary db: ", err)
+		_, e := db.ExecContext(context.Background(), sqlDropDB) //nolint:gosec // pq.QuoteIdentifier ensures safe identifier quoting.
+		if e != nil {
+			log.Print("failed to drop temporary db: ", e)
 		}
 	}
 	defer onErr(dropTempDB)
@@ -72,7 +78,8 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		return nil, nil, err
 	}
 	closeTempDB := func() {
-		if err := dbTemp.Close(); err != nil {
+		err := dbTemp.Close()
+		if err != nil {
 			log.Print("failed to close temporary db: ", err)
 		}
 	}
@@ -82,11 +89,12 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		dbCfg.User = os.Getenv("PGUSER")
 	}
 	sqlCreateSchema := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS AUTHORIZATION %s", pq.QuoteIdentifier(dbCfg.User))
-	if _, err := dbTemp.Exec(sqlCreateSchema); err != nil {
+	_, err = dbTemp.ExecContext(context.Background(), sqlCreateSchema) //nolint:gosec // pq.QuoteIdentifier ensures safe identifier quoting.
+	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create schema in temporary db: %w", err)
 	}
 
-	err = dbTemp.Ping()
+	err = dbTemp.PingContext(context.Background())
 	if err != nil {
 		return nil, nil, err
 	}
