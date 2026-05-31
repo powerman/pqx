@@ -10,7 +10,7 @@ import (
 	"github.com/powerman/pqx"
 )
 
-func TestConfig(tt *testing.T) {
+func TestConfig(tt *testing.T) { //nolint:paralleltest,tparallel // check.T(tt).Parallel() handles this.
 	t := check.T(tt)
 	t.Parallel()
 
@@ -175,8 +175,8 @@ func TestConfig(tt *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run("", func(tt *testing.T) {
+			tt.Parallel()
 			t := check.T(tt)
 			if tc.wantPanic != "" {
 				t.PanicMatch(func() { tc.cfg.FormatDSN() }, tc.wantPanic)

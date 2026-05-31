@@ -1,10 +1,11 @@
 package pqx
 
 import (
+	"cmp"
 	"database/sql"
 	"fmt"
 	"net/url"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +45,7 @@ type Config struct {
 }
 
 // FormatDSN returns dataSourceName string with properly escaped
-// connection parameters suitable for sql.Open.
+// connection parameters suitable for [sql.Open].
 func (c Config) FormatDSN() string {
 	// Borrowed from pq.ParseURL.
 	var kvs []string
@@ -69,7 +70,7 @@ func (c Config) FormatDSN() string {
 	return strings.Join(kvs, " ")
 }
 
-// FormatURL returns dataSourceName url suitable for sql.Open.
+// FormatURL returns dataSourceName url suitable for [sql.Open].
 func (c Config) FormatURL() string {
 	var u url.URL
 	u.Scheme = "postgres"
@@ -129,7 +130,7 @@ func (c Config) options() [][2]string {
 	for k, v := range c.Other {
 		accrue(k, v)
 	}
-	sort.Slice(opts[off:], func(i, j int) bool { return opts[off+i][0] < opts[off+j][0] }) // For testing.
+	slices.SortFunc(opts[off:], func(a, b [2]string) int { return cmp.Compare(a[0], b[0]) }) // For testing.
 
 	return opts
 }

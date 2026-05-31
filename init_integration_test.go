@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package pqx_test
 

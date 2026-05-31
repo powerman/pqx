@@ -25,7 +25,7 @@ type dialer struct{}
 
 // Dial implements pq.Dialer interface.
 func (dialer) Dial(network, address string) (net.Conn, error) {
-	return Dial(network, address, 0) //nolint:revive // False positive.
+	return Dial(network, address, 0)
 }
 
 // DialTimeout implements pq.Dialer interface.
