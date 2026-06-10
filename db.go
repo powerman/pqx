@@ -52,7 +52,7 @@ func EnsureTempDB(log Logger, suffix string, dbCfg Config) (_ *sql.DB, cleanup f
 		dbCfg.DBName = os.Getenv("PGDATABASE")
 	}
 	dbCfg.DBName += "_" + suffix
-	sqlDropDB := fmt.Sprintf("DROP DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
+	sqlDropDB := fmt.Sprintf("DROP DATABASE %s WITH (FORCE)", pq.QuoteIdentifier(dbCfg.DBName))
 	sqlCreateDB := fmt.Sprintf("CREATE DATABASE %s", pq.QuoteIdentifier(dbCfg.DBName))
 	_, err = db.ExecContext(context.Background(), sqlDropDB) //nolint:gosec // pq.QuoteIdentifier ensures safe identifier quoting.
 	if err != nil {
