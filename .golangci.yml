@@ -42,6 +42,10 @@ linters:
               desc: Not allowed because it uses global variables
             - pkg: github.com/golang/protobuf
               desc: Should be replaced by google.golang.org/protobuf package
+            - pkg: github.com/grpc-ecosystem/go-grpc-middleware$
+              desc: Should be replaced by github.com/grpc-ecosystem/go-grpc-middleware/v2
+            - pkg: github.com/grpc-ecosystem/go-grpc-prometheus
+              desc: Should be replaced by github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus
     dupl:
       threshold: 100
     embeddedstructfieldcheck:
@@ -212,6 +216,7 @@ linters:
         - name: error-strings
         - name: errorf
         - name: exported
+          disabled: true # Duplicates godoclint.
         - name: file-header
         - name: file-length-limit
         - name: filename-format
@@ -314,7 +319,19 @@ linters:
         - yaml
         - yml
         - toml
+        - cmd
+        - arg
+        - embed
+        - hidden
+        - passthrough
+        - optional
+        - required
+        - default
+        - envprefix
         - env
+        - name
+        - enum
+        - help
         - mod
         - mapstructure
         - binding
@@ -351,15 +368,15 @@ linters:
       report-internal-errors: true
   exclusions:
     rules:
-      - path: (.+)\.go$
+      - linters:
+          - govet
         text: declaration of "(log|err|ctx)" shadows
-      - path: (.+)\.go$
-        text: 'missing cases in switch of type \S+: \S+_UNSPECIFIED$'
       - path: _test\.go|testing(_.*)?\.go
         linters:
           - bodyclose
           - dupl
           - errcheck
+          - fatcontext
           - forcetypeassert
           - funlen
           - gochecknoglobals
@@ -370,9 +387,6 @@ linters:
           - gosec
           - maintidx
           - reassign
-      - source: '[Cc]onst' # Define global const-vars like: var SomeGlobal = []int{42} // Const.
-        linters:
-          - gochecknoglobals
       - path: _test\.go|testing(_.*)?\.go
         text: (unnamedResult|exitAfterDefer|rangeValCopy|unnecessaryBlock)
         linters:
@@ -382,6 +396,9 @@ linters:
         linters:
           - govet
       - path: ^(.*/)?embed.go$
+        linters:
+          - gochecknoglobals
+      - source: '[Cc]onst' # Define global const-vars like: var SomeGlobal = []int{42} // Const.
         linters:
           - gochecknoglobals
       - linters:
@@ -413,6 +430,7 @@ formatters:
     golines:
       max-len: 200
       tab-len: 8
+      reformat-tags: false
   exclusions:
     generated: strict
     paths:
