@@ -26,6 +26,16 @@ git-cliff = 'latest'
 gh = 'latest'
 
 
+[env]
+GO_INTEGRATION_TEST = '1'
+PGUSER = 'test'
+PGPASSWORD = 'test'
+PGHOST = 'localhost'
+PGPORT = '5432'
+PGDATABASE = 'postgres'
+PGSSLMODE = 'disable'
+
+
 [vars]
 cover = '.cache/cover.out'
 
