@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-07-12
+
+### 📦️ Dependencies
+
+- **(deps)** Update powerman/check v1.9.1→v1.13.0, powerman/gotest v0.3.0→v0.4.0 by @powerman in [4d1554e]
+
+[0.9.1]: https://github.com/powerman/pqx/compare/v0.9.0..v0.9.1
+[4d1554e]: https://github.com/powerman/pqx/commit/4d1554e4631c12bad0fb41e6a974b3bcae5f19ba
+
 ## [0.9.0] - 2026-06-10
 
 ### 🔔 Changed
