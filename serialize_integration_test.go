@@ -18,7 +18,7 @@ func TestSerialize(tt *testing.T) {
 		tt.Skip("skipping integration test; set GO_INTEGRATION_TEST to run it")
 	}
 	tt.Parallel()
-	t := check.T(tt)
+	t := check.Must(tt)
 
 	_, err := testDB.ExecContext(t.Context(), `CREATE TABLE serialize (class INT, value INT)`)
 	t.Nil(err)
