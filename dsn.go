@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"database/sql"
 	"fmt"
-	"net/url"
+	urlpkg "net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -72,13 +72,13 @@ func (c Config) FormatDSN() string {
 
 // FormatURL returns dataSourceName url suitable for [sql.Open].
 func (c Config) FormatURL() string {
-	var u url.URL
+	var u urlpkg.URL
 	u.Scheme = "postgres"
 
 	if c.Pass != "" {
-		u.User = url.UserPassword(c.User, c.Pass)
+		u.User = urlpkg.UserPassword(c.User, c.Pass)
 	} else if c.User != "" {
-		u.User = url.User(c.User)
+		u.User = urlpkg.User(c.User)
 	}
 	u.Host = c.Host
 	if c.Port > 0 {
@@ -86,7 +86,7 @@ func (c Config) FormatURL() string {
 	}
 	u.Path = "/" + c.DBName
 
-	v := make(url.Values)
+	v := make(urlpkg.Values)
 	for _, kv := range c.options() {
 		v.Set(kv[0], kv[1])
 	}
